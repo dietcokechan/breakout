@@ -13,6 +13,12 @@ int pRectX, pRectY;
 int bPosX, bPosY;
 int direction;
 float speed;
+const int brickRows = 6;
+const int brickRowCount = 12;
+const int brickPadding = 6;
+Color colors[3] = {DARKBLUE, BLUE, SKYBLUE};
+Rectangle bricks[brickRows][brickRowCount] = { 0 };
+Vector2 brickSize = { 60, 30 };
 
 // functions
 static void InitGame();
@@ -33,9 +39,20 @@ void InitGame() {
   direction = 1;
   speed = 5.0f;
 
-  InitWindow(screenWidth, screenHeight, "Breakout");
+  // init bricks
+  int initialPos = 60;
   
-  SetTargetFPS(60);
+  for (int i = 0; i < brickRows; i++) {
+    int paddingX = brickSize.x / 2 + brickPadding;
+    
+    for (int j = 0; j < brickRowCount; j++) {
+      bricks[i][j].x = j * brickSize.x + paddingX;
+      bricks[i][j].y = i * brickSize.y + initialPos;
+      
+      paddingX += brickPadding;
+    }
+    initialPos += brickPadding;
+  }
 }
 
 // update
@@ -60,16 +77,25 @@ void DrawGame() {
   DrawRectangle(pRectX, pRectY + 200, pWidth, pHeight, BLACK);
 
   // draw ball
-  DrawCircle(bPosX, bPosY + 100, bRadius, RED); 
+  DrawCircle(bPosX, bPosY + 100, bRadius, MAROON);
+
+  // draw bricks
+  for (int i = 0; i < brickRows; i++) {
+    Color brickColor = colors[i % 3];
+    for (int j = 0; j < brickRowCount; j++) {
+      DrawRectangle(bricks[i][j].x - brickSize.x / 2, bricks[i][j].y - brickSize.y / 2, brickSize.x, brickSize.y, brickColor);
+    }
+  }
   
   DrawFPS(10, 10);
-  
   EndDrawing();
 }
 
 int main() {
+  InitWindow(screenWidth, screenHeight, "Breakout");
+  SetTargetFPS(60);
   InitGame();
-
+  
   while (!WindowShouldClose()) {
     UpdateGame();
     DrawGame();
