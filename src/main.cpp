@@ -1,24 +1,34 @@
 #include "raylib.h"
 
-#define screenWidth 800
-#define screenHeight 600
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define BRICK_ROWS 6
+#define BRICKS_PER_ROW 12
 
-// constant variables
-static const int pWidth = 160;
-static const int pHeight = 20;
-static const int bRadius = 16;
+// structs
+typedef struct Player {
+  Vector2 pos;
+  Vector2 size;
+} Player;
+
+typedef struct Ball {
+  Vector2 pos;
+  Vector2 speed;
+  int radius;
+} Ball;
+
+typedef struct Brick {
+  Vector2 pos;
+} Brick;
 
 // global variables
-int pRectX, pRectY;
-int bPosX, bPosY;
-int direction;
-float speed;
-const int brickRows = 6;
-const int brickRowCount = 12;
-const int brickPadding = 6;
-Color colors[3] = {DARKBLUE, BLUE, SKYBLUE};
-Rectangle bricks[brickRows][brickRowCount] = { 0 };
-Vector2 brickSize = { 60, 30 };
+static Player player = { 0 };
+static Ball ball = { 0 };
+static Brick brick[BRICK_ROWS][BRICKS_PER_ROW];
+
+static Color colors[3] = {DARKBLUE, BLUE, SKYBLUE};
+static Vector2 brickSize = { 0 };
+static const int brickPadding = 6;
 
 // functions
 static void InitGame();
@@ -28,26 +38,24 @@ static void DrawGame();
 // initialization
 void InitGame() {
   // init player
-  pRectX = (screenWidth - pWidth) / 2;
-  pRectY = (screenHeight - pHeight) / 2;
+  player.size = (Vector2){ SCREEN_WIDTH / 8, 20 };
+  player.pos = (Vector2){ (SCREEN_WIDTH - player.size.x) / 2, (SCREEN_HEIGHT - player.size.y) / 2 };
 
   // init ball
-  bPosX = (screenWidth - bRadius) / 2;
-  bPosY = (screenHeight - bRadius) / 2;
-
-  // idle ball anim
-  direction = 1;
-  speed = 5.0f;
+  ball.radius = 10;
+  ball.pos = (Vector2){ player.pos.x, player.pos.y - player.size.y / 2 - ball.radius };
+  ball.speed = (Vector2){ 0, 0 };
 
   // init bricks
+  brickSize = (Vector2){ SCREEN_WIDTH / BRICKS_PER_ROW, 26};
   int initialPos = 60;
   
-  for (int i = 0; i < brickRows; i++) {
+  for (int i = 0; i < BRICK_ROWS; i++) {
     int paddingX = brickSize.x / 2 + brickPadding;
     
-    for (int j = 0; j < brickRowCount; j++) {
-      bricks[i][j].x = j * brickSize.x + paddingX;
-      bricks[i][j].y = i * brickSize.y + initialPos;
+    for (int j = 0; j < BRICKS_PER_ROW; j++) {
+      brick[i][j].pos.x = j * brickSize.x + paddingX;
+      brick[i][j].pos.y = i * brickSize.y + initialPos;
       
       paddingX += brickPadding;
     }
@@ -57,15 +65,35 @@ void InitGame() {
 
 // update
 void UpdateGame() {
-  // move ball side to side
-  bPosX += direction * speed;
-  if (bPosX + bRadius >= screenWidth || bPosX - bRadius <= 0) {
-    direction *= -1;
+  // ball movement
+  if (ball.pos.x + ball.radius >= SCREEN_WIDTH || ball.pos.x - ball.radius <= 0) {
+    ball.speed.x *= -1;
+  }
+  else if (ball.pos.y + ball.radius >= SCREEN_HEIGHT || ball.pos.y - ball.radius <= 0) {
+    ball.speed.y *= -1;
   }
 
-  // player input
-  if (IsKeyDown(KEY_RIGHT)) pRectX += 5.0f;
-  if (IsKeyDown(KEY_LEFT)) pRectX -= 5.0f;
+  if (IsKeyPressed(KEY_SPACE)) {
+    ball.speed = (Vector2){ 0, -5 };
+  }
+  ball.pos.x += ball.speed.x;
+  ball.pos.y += ball.speed.y;
+  
+
+  // player movement (restrict to window)
+  if (IsKeyDown(KEY_RIGHT)) {
+    player.pos.x += 5.0f;
+  }
+  if (player.pos.x + player.size.x / 2 >= SCREEN_WIDTH) {
+    player.pos.x = SCREEN_WIDTH - player.size.x / 2;
+  }
+
+  if (IsKeyDown(KEY_LEFT)) {
+    player.pos.x -= 5.0f;
+  }
+  if (player.pos.x - player.size.x <= 0) {
+    player.pos.x = player.size.x / 2;
+  }
 }
 
 // drawing
@@ -74,16 +102,16 @@ void DrawGame() {
   ClearBackground(RAYWHITE);
   
   // draw player rect
-  DrawRectangle(pRectX, pRectY + 200, pWidth, pHeight, BLACK);
+  DrawRectangle(player.pos.x, player.pos.y + 200, player.size.x, player.size.y, BLACK);
 
   // draw ball
-  DrawCircle(bPosX, bPosY + 100, bRadius, MAROON);
+  DrawCircle(ball.pos.x, ball.pos.y + 100, ball.radius, MAROON);
 
   // draw bricks
-  for (int i = 0; i < brickRows; i++) {
+  for (int i = 0; i < BRICK_ROWS; i++) {
     Color brickColor = colors[i % 3];
-    for (int j = 0; j < brickRowCount; j++) {
-      DrawRectangle(bricks[i][j].x - brickSize.x / 2, bricks[i][j].y - brickSize.y / 2, brickSize.x, brickSize.y, brickColor);
+    for (int j = 0; j < BRICKS_PER_ROW; j++) {
+      DrawRectangle(brick[i][j].pos.x - brickSize.x / 2, brick[i][j].pos.y - brickSize.y / 2, brickSize.x, brickSize.y, brickColor);
     }
   }
   
@@ -92,7 +120,7 @@ void DrawGame() {
 }
 
 int main() {
-  InitWindow(screenWidth, screenHeight, "Breakout");
+  InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
   SetTargetFPS(60);
   InitGame();
   
