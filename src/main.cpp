@@ -34,12 +34,25 @@ static const int brickPadding = 6;
 static void InitGame();
 static void UpdateGame();
 static void DrawGame();
+static void CollisionChecks();
+
+// check for ball collision with player/bricks
+void CollisionChecks() {
+  // ball collision with player
+  Rectangle playerRect = (Rectangle){ player.pos.x - player.size.x / 2, player.pos.y - player.size.y / 2, player.size.x, player.size.y };
+  if (CheckCollisionCircleRec(ball.pos, ball.radius, playerRect)) {
+    if (ball.speed.y > 0) {
+      ball.speed.y *= -1;
+      ball.speed.x = (ball.pos.x - player.pos.x) / (player.size.x / 2) * 5;
+    }
+  }
+}
 
 // initialization
 void InitGame() {
   // init player
-  player.size = (Vector2){ SCREEN_WIDTH / 8, 20 };
-  player.pos = (Vector2){ (SCREEN_WIDTH - player.size.x) / 2, (SCREEN_HEIGHT - player.size.y) / 2 };
+  player.size = (Vector2){ SCREEN_WIDTH / 10, 20 };
+  player.pos = (Vector2){ (SCREEN_WIDTH - player.size.x) / 2, SCREEN_HEIGHT * 0.9 };
 
   // init ball
   ball.radius = 10;
@@ -85,15 +98,17 @@ void UpdateGame() {
     player.pos.x += 5.0f;
   }
   if (player.pos.x + player.size.x / 2 >= SCREEN_WIDTH) {
-    player.pos.x = SCREEN_WIDTH - player.size.x / 2;
+    player.pos.x = SCREEN_WIDTH - (player.size.x / 2);
   }
 
   if (IsKeyDown(KEY_LEFT)) {
     player.pos.x -= 5.0f;
   }
-  if (player.pos.x - player.size.x <= 0) {
-    player.pos.x = player.size.x / 2;
+  if (player.pos.x - player.size.x / 2 <= 0) {
+    player.pos.x = (player.size.x / 2);
   }
+
+  CollisionChecks();
 }
 
 // drawing
@@ -102,10 +117,10 @@ void DrawGame() {
   ClearBackground(RAYWHITE);
   
   // draw player rect
-  DrawRectangle(player.pos.x, player.pos.y + 200, player.size.x, player.size.y, BLACK);
+  DrawRectangle(player.pos.x - player.size.x / 2, player.pos.y - player.size.y / 2, player.size.x, player.size.y, BLACK);
 
   // draw ball
-  DrawCircle(ball.pos.x, ball.pos.y + 100, ball.radius, MAROON);
+  DrawCircleV(ball.pos, ball.radius, MAROON);
 
   // draw bricks
   for (int i = 0; i < BRICK_ROWS; i++) {
