@@ -39,6 +39,8 @@ Then to run the game:
 cd build && ./breakout
 ```
 
+Don't want to build it yourself? It's available here https://dietcokechan.itch.io/breakout
+
 Easy peasy! Ready to have some fun smashing those bricks?
 
 Feel free to tweak it, add new features, or just chill and enjoy the game. If you do, let me know — always love to hear about your mods or improvements!

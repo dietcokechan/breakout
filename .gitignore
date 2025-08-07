@@ -2,3 +2,7 @@ build/
 .idea/
 .vscode/
 cmake-build-debug/
+build_web.sh
+web_build/
+*.zip
+
