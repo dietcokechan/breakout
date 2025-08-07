@@ -3,8 +3,8 @@
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
-#define BRICK_ROWS 5
-#define BRICKS_PER_ROW 10
+#define BRICK_ROWS 4
+#define BRICKS_PER_ROW 12
 
 // structs
 typedef struct Player {
@@ -32,7 +32,7 @@ static Brick brick[BRICK_ROWS][BRICKS_PER_ROW];
 
 static Color colors[3] = {DARKBLUE, BLUE, SKYBLUE};
 static Vector2 brickSize = { 0 };
-static const int brickPadding = 6;
+static int inactiveBricks = 0;
 
 static bool gameOver = false;
 static bool won = false;
@@ -83,6 +83,7 @@ void CollisionChecks() {
             ((std::fabs(ball.pos.x - j.pos.x)) < (brickSize.x/2 + ball.radius * 2/3)) && (ball.speed.y < 0))
         {
           j.active = false;
+          inactiveBricks++;
           ball.speed.y *= -1;
           PlaySound(hitSound);
         }
@@ -92,6 +93,7 @@ void CollisionChecks() {
                 ((std::fabs(ball.pos.x - j.pos.x)) < (brickSize.x/2 + ball.radius * 2/3)) && (ball.speed.y > 0))
         {
           j.active = false;
+          inactiveBricks++;
           ball.speed.y *= -1;
           PlaySound(hitSound);
         }
@@ -101,6 +103,7 @@ void CollisionChecks() {
                 ((std::fabs(ball.pos.y - j.pos.y)) < (brickSize.y/2 + ball.radius * 2/3)) && (ball.speed.x > 0))
         {
           j.active = false;
+          inactiveBricks++;
           ball.speed.x *= -1;
           PlaySound(hitSound);
         }
@@ -110,6 +113,7 @@ void CollisionChecks() {
                 ((std::fabs(ball.pos.y - j.pos.y)) < (brickSize.y/2 + ball.radius * 2/3)) && (ball.speed.x < 0))
         {
           j.active = false;
+          inactiveBricks++;
           ball.speed.x *= -1;
           PlaySound(hitSound);
         }
@@ -144,7 +148,7 @@ void InitGame() {
 
 // update
 void UpdateGame() {
-  if (!gameOver) {
+  if (!gameOver && !won) {
     // ball movement
     if (ball.pos.x + ball.radius >= SCREEN_WIDTH || ball.pos.x - ball.radius <= 0) {
       ball.speed.x *= -1;
@@ -182,23 +186,18 @@ void UpdateGame() {
 
     CollisionChecks();
 
-    int inactiveBricks = 0;
-    for (int i = 0; i < BRICK_ROWS; i++) {
-      for (int j = 0; j < BRICKS_PER_ROW; j++) {
-        if (!brick[i][j].active) {
-          inactiveBricks++;
-        }
-      }
-    }
     if (inactiveBricks >= BRICK_ROWS * BRICKS_PER_ROW) {
       won = true;
       PlaySound(winSound);
     }
+    else won = false;
   }
   else {
     if (IsKeyPressed(KEY_SPACE)) {
       InitGame();
       gameOver = false;
+      won = false;
+      inactiveBricks = 0;
     }
   }
 }
@@ -208,7 +207,7 @@ void DrawGame() {
   BeginDrawing();
   ClearBackground(RAYWHITE);
 
-  if (!gameOver) {
+  if (!gameOver && !won) {
     // draw player rect
     DrawRectangle(player.pos.x - player.size.x / 2, player.pos.y - player.size.y / 2, player.size.x, player.size.y, BLACK);
 
