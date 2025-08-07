@@ -53,6 +53,7 @@ void OnBrickHit(Brick *b) {
   b->active = false;
   inactiveBricks++;
   PlaySound(hitSound);
+  player.score += 2;
 }
 
 
@@ -126,6 +127,7 @@ void InitGame() {
   // init player
   player.size = (Vector2){ SCREEN_WIDTH / 10, 20 };
   player.pos = (Vector2){ (SCREEN_WIDTH - player.size.x) / 2, SCREEN_HEIGHT * 0.9 };
+  player.score = 0;
 
   // init ball
   ball.radius = 10;
@@ -222,15 +224,18 @@ void DrawGame() {
         }
       }
     }
+
+    // score
+    DrawText(TextFormat("Score: %i", player.score), 10, 10, 20, BLACK);
   }
   else if (won) {
-    DrawText("Y0U WON! \nPRESS [SPACE] TO PLAY AGAIN", SCREEN_WIDTH / 2 - MeasureText("Y0U WON! \nPRESS [SPACE] TO PLAY AGAIN", 20) / 2, SCREEN_HEIGHT / 2 - 50, 20, DARKGRAY);
+    DrawText("Y0U WON!\nPRESS [SPACE] TO PLAY AGAIN", SCREEN_WIDTH / 2 - MeasureText("Y0U WON! \nPRESS [SPACE] TO PLAY AGAIN", 20) / 2, SCREEN_HEIGHT / 2 - 50, 20, DARKGRAY);
   }
   else {
-    DrawText("PRESS [SPACE] TO PLAY AGAIN", SCREEN_WIDTH / 2 - MeasureText("PRESS [SPACE] TO PLAY AGAIN", 20) / 2, SCREEN_HEIGHT / 2 - 50, 20, DARKGRAY);
+    DrawText(TextFormat("GAME OVER! YOUR SCORE IS %i\nPRESS [SPACE] TO PLAY AGAIN", player.score), SCREEN_WIDTH / 2 - MeasureText("PRESS [SPACE] TO PLAY AGAIN", 20) / 2, SCREEN_HEIGHT / 2 - 50, 20, DARKGRAY);
   }
   
-  DrawFPS(10, 10);
+  DrawFPS(10, SCREEN_HEIGHT - 20);
   EndDrawing();
 }
 
