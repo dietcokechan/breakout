@@ -35,12 +35,32 @@ static Vector2 brickSize = { 0 };
 static const int brickPadding = 6;
 
 static bool gameOver = false;
+static bool won = false;
+
+static Sound hitSound;
+static Sound loseSound;
+static Sound winSound;
 
 // functions
 static void InitGame();
 static void UpdateGame();
 static void DrawGame();
 static void CollisionChecks();
+static void LoadGame();
+static void UnloadGame();
+
+void LoadGame() {
+  InitAudioDevice();
+
+  // load sounds
+  hitSound = LoadSound("../audio/hit.wav");
+  loseSound = LoadSound("../audio/lose.wav");
+  winSound = LoadSound("../audio/win.wav");
+}
+
+void UnloadGame() {
+  CloseAudioDevice();
+}
 
 // check for ball collision with player/bricks
 void CollisionChecks() {
@@ -62,32 +82,36 @@ void CollisionChecks() {
             ((ball.pos.y - ball.radius) > (j.pos.y + brickSize.y/2 + ball.speed.y)) &&
             ((std::fabs(ball.pos.x - j.pos.x)) < (brickSize.x/2 + ball.radius * 2/3)) && (ball.speed.y < 0))
         {
-            j.active = false;
-            ball.speed.y *= -1;
+          j.active = false;
+          ball.speed.y *= -1;
+          PlaySound(hitSound);
         }
         // hit up
         else if (((ball.pos.y + ball.radius) >= (j.pos.y - brickSize.y/2)) &&
                 ((ball.pos.y + ball.radius) < (j.pos.y - brickSize.y/2 + ball.speed.y)) &&
                 ((std::fabs(ball.pos.x - j.pos.x)) < (brickSize.x/2 + ball.radius * 2/3)) && (ball.speed.y > 0))
         {
-            j.active = false;
-            ball.speed.y *= -1;
+          j.active = false;
+          ball.speed.y *= -1;
+          PlaySound(hitSound);
         }
         // hit left
         else if (((ball.pos.x + ball.radius) >= (j.pos.x - brickSize.x/2)) &&
                 ((ball.pos.x + ball.radius) < (j.pos.x - brickSize.x/2 + ball.speed.x)) &&
                 ((std::fabs(ball.pos.y - j.pos.y)) < (brickSize.y/2 + ball.radius * 2/3)) && (ball.speed.x > 0))
         {
-            j.active = false;
-            ball.speed.x *= -1;
+          j.active = false;
+          ball.speed.x *= -1;
+          PlaySound(hitSound);
         }
         // hit right
         else if (((ball.pos.x - ball.radius) <= (j.pos.x + brickSize.x/2)) &&
                 ((ball.pos.x - ball.radius) > (j.pos.x + brickSize.x/2 + ball.speed.x)) &&
                 ((std::fabs(ball.pos.y - j.pos.y)) < (brickSize.y/2 + ball.radius * 2/3)) && (ball.speed.x < 0))
         {
-            j.active = false;
-            ball.speed.x *= -1;
+          j.active = false;
+          ball.speed.x *= -1;
+          PlaySound(hitSound);
         }
       }
     }
@@ -131,8 +155,10 @@ void UpdateGame() {
     if (ball.pos.y + ball.radius >= SCREEN_HEIGHT) {
       ball.speed = (Vector2){ 0, 0 };
       gameOver = true;
+      PlaySound(loseSound);
     }
 
+    // start game
     if (IsKeyPressed(KEY_SPACE)) {
       ball.speed = (Vector2){ 0, -5 };
     }
@@ -155,6 +181,19 @@ void UpdateGame() {
     }
 
     CollisionChecks();
+
+    int inactiveBricks = 0;
+    for (int i = 0; i < BRICK_ROWS; i++) {
+      for (int j = 0; j < BRICKS_PER_ROW; j++) {
+        if (!brick[i][j].active) {
+          inactiveBricks++;
+        }
+      }
+    }
+    if (inactiveBricks >= BRICK_ROWS * BRICKS_PER_ROW) {
+      won = true;
+      PlaySound(winSound);
+    }
   }
   else {
     if (IsKeyPressed(KEY_SPACE)) {
@@ -186,9 +225,11 @@ void DrawGame() {
       }
     }
   }
+  else if (won) {
+    DrawText("Y0U WON! \nPRESS [SPACE] TO PLAY AGAIN", SCREEN_WIDTH / 2 - MeasureText("Y0U WON! \nPRESS [SPACE] TO PLAY AGAIN", 20) / 2, SCREEN_HEIGHT / 2 - 50, 20, DARKGRAY);
+  }
   else {
-    DrawText("PRESS [SPACE] TO PLAY", SCREEN_WIDTH / 2 - MeasureText("PRESS [SPACE] TO PLAY", 20) / 2,
-             SCREEN_HEIGHT / 2 - 50, 20, DARKGRAY);
+    DrawText("PRESS [SPACE] TO PLAY AGAIN", SCREEN_WIDTH / 2 - MeasureText("PRESS [SPACE] TO PLAY AGAIN", 20) / 2, SCREEN_HEIGHT / 2 - 50, 20, DARKGRAY);
   }
   
   DrawFPS(10, 10);
@@ -198,13 +239,15 @@ void DrawGame() {
 int main() {
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
   SetTargetFPS(60);
+  LoadGame();
   InitGame();
   
   while (!WindowShouldClose()) {
     UpdateGame();
     DrawGame();
   }
-  
+
+  UnloadGame();
   CloseWindow();
   
   return 0;
