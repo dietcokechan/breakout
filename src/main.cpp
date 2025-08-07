@@ -4,17 +4,16 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 #define BRICK_ROWS 4
-#define BRICKS_PER_ROW 12
+#define BRICKS_PER_ROW 10
 
 // structs
 typedef struct Player {
-  Vector2 initialPos;
   Vector2 pos;
   Vector2 size;
+  int score;
 } Player;
 
 typedef struct Ball {
-  Vector2 initialPos;
   Vector2 pos;
   Vector2 speed;
   int radius;
@@ -48,6 +47,14 @@ static void DrawGame();
 static void CollisionChecks();
 static void LoadGame();
 static void UnloadGame();
+static void OnBrickHit(Brick *b);
+
+void OnBrickHit(Brick *b) {
+  b->active = false;
+  inactiveBricks++;
+  PlaySound(hitSound);
+}
+
 
 void LoadGame() {
   InitAudioDevice();
@@ -82,40 +89,32 @@ void CollisionChecks() {
             ((ball.pos.y - ball.radius) > (j.pos.y + brickSize.y/2 + ball.speed.y)) &&
             ((std::fabs(ball.pos.x - j.pos.x)) < (brickSize.x/2 + ball.radius * 2/3)) && (ball.speed.y < 0))
         {
-          j.active = false;
-          inactiveBricks++;
+          OnBrickHit(&j);
           ball.speed.y *= -1;
-          PlaySound(hitSound);
         }
         // hit up
         else if (((ball.pos.y + ball.radius) >= (j.pos.y - brickSize.y/2)) &&
                 ((ball.pos.y + ball.radius) < (j.pos.y - brickSize.y/2 + ball.speed.y)) &&
                 ((std::fabs(ball.pos.x - j.pos.x)) < (brickSize.x/2 + ball.radius * 2/3)) && (ball.speed.y > 0))
         {
-          j.active = false;
-          inactiveBricks++;
+          OnBrickHit(&j);
           ball.speed.y *= -1;
-          PlaySound(hitSound);
         }
         // hit left
         else if (((ball.pos.x + ball.radius) >= (j.pos.x - brickSize.x/2)) &&
                 ((ball.pos.x + ball.radius) < (j.pos.x - brickSize.x/2 + ball.speed.x)) &&
                 ((std::fabs(ball.pos.y - j.pos.y)) < (brickSize.y/2 + ball.radius * 2/3)) && (ball.speed.x > 0))
         {
-          j.active = false;
-          inactiveBricks++;
+          OnBrickHit(&j);
           ball.speed.x *= -1;
-          PlaySound(hitSound);
         }
         // hit right
         else if (((ball.pos.x - ball.radius) <= (j.pos.x + brickSize.x/2)) &&
                 ((ball.pos.x - ball.radius) > (j.pos.x + brickSize.x/2 + ball.speed.x)) &&
                 ((std::fabs(ball.pos.y - j.pos.y)) < (brickSize.y/2 + ball.radius * 2/3)) && (ball.speed.x < 0))
         {
-          j.active = false;
-          inactiveBricks++;
+          OnBrickHit(&j);
           ball.speed.x *= -1;
-          PlaySound(hitSound);
         }
       }
     }
@@ -126,11 +125,11 @@ void CollisionChecks() {
 void InitGame() {
   // init player
   player.size = (Vector2){ SCREEN_WIDTH / 10, 20 };
-  player.pos = player.initialPos = (Vector2){ (SCREEN_WIDTH - player.size.x) / 2, SCREEN_HEIGHT * 0.9 };
+  player.pos = (Vector2){ (SCREEN_WIDTH - player.size.x) / 2, SCREEN_HEIGHT * 0.9 };
 
   // init ball
   ball.radius = 10;
-  ball.pos = ball.initialPos = (Vector2){ player.pos.x, player.pos.y - player.size.y / 2 - ball.radius };
+  ball.pos = (Vector2){ player.pos.x, player.pos.y - player.size.y / 2 - ball.radius };
   ball.speed = (Vector2){ 0, 0 };
 
   // init bricks
