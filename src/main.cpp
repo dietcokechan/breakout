@@ -224,7 +224,6 @@ void DrawGame() {
         }
       }
     }
-
     // score
     DrawText(TextFormat("Score: %i", player.score), 10, 10, 20, BLACK);
   }
